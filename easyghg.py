@@ -6,40 +6,51 @@ from ghgforcing import CO2, CH4
 import matplotlib.pyplot as plt
 import seaborn as sns
 
+def str_to_bool(s):
+    if s == 'True':
+         return True
+    elif s == 'False':
+         return False
+    else:
+         raise ValueError # evil ValueError that doesn't tell you what the wrong value was
 
 def ghg_calc():
     wb = xw.Workbook.caller()
+    xw.Sheet('Full_output').clear_contents()
+    tstep = 1
     years = np.arange(0,101)
     co2_emiss = xw.Range('B3:B103').options(np.array,empty=0).value
     ch4_emiss = xw.Range('C3:C103').options(np.array,empty=0).value
-    ch4_fossil = xw.Range('N2').value
-    ch4_fb = xw.Range('N3').value
+    ch4_fossil = str_to_bool(xw.Range('N2').value)
+    ch4_fb = str_to_bool(xw.Range('N3').value)
+    pulse = str_to_bool(xw.Range('N11').value)
     n_runs = int(xw.Range('N6').value)
     RS = int(xw.Range('N7').value)
-    full_out = xw.Range('N8').value
-    
-    #if len(co2_emiss) < len(years):
-    #    diff_co2 = len(years) - len(co2_emiss)
-    #    co2_emiss.append(np.zeros(diff_co2))
-    
-    #if len(ch4_emiss) < len(years):
-    #    diff_ch4 = len(years) - len(ch4_emiss)
-    #    ch4_emiss.append(np.zeros(diff_ch4))
-    
-    
-    xw.Range('B3').options(transpose=True).value = co2_emiss
-    xw.Range('C3').options(transpose=True).value = ch4_emiss
+    full_out = str_to_bool(xw.Range('N8').value)
+    kind = xw.Range('N12').value
+
+    if pulse == True:
+        tstep = 0.0001
+        co2_init = co2_emiss[0]
+        ch4_init = ch4_emiss[0]
+        
+        years = np.linspace(0,100, 100/tstep+1)
+        co2_emiss = np.zeros_like(years)
+        co2_emiss[0] = co2_init
+        
+        ch4_emiss = np.zeros_like(years)
+        ch4_emiss[0] = ch4_init
     
     if n_runs > 1:
         
-        co2_mc, co2_full = CO2(co2_emiss, years, tstep=1, RS=RS, 
+        co2_mc, co2_full = CO2(co2_emiss, years, tstep=tstep, RS=RS, kind=kind,
                     runs=n_runs, full_output=full_out)
-        ch4_mc, ch4_full = CH4(ch4_emiss, years, tstep=1, RS=RS, 
-                    runs=n_runs, full_output=True)
+        ch4_mc, ch4_full = CH4(ch4_emiss, years, tstep=tstep, RS=RS, kind=kind, 
+                    runs=n_runs, full_output=full_out,
+                    decay=ch4_fossil, cc_fb=ch4_fb)
         total_full = co2_full + ch4_full
         total_df = pd.DataFrame(total_full)
         
-        #wb = xw.Workbook('Full_output')
         
         xw.Range('Full_output', 'A2').value = total_df
         xw.Range('Full_output', 'A2').value = 'Year'
@@ -61,15 +72,18 @@ def ghg_calc():
         sns.despine()
         fig = plt.gcf()
         plot = xw.Plot(fig).show('MyPlot', 
-                                left=xw.Range('I13').left, 
-                                top=xw.Range('I13').top,
+                                left=xw.Range('I15').left, 
+                                top=xw.Range('I15').top,
                                 width=533, height=400)
     
     else:
-        co2_rf = CO2(co2_emiss, years, tstep=1)
-        ch4_rf = CH4(ch4_emiss, years, tstep=1,
+        co2_rf = CO2(co2_emiss, years, tstep=tstep, kind=kind,)
+        ch4_rf = CH4(ch4_emiss, years, tstep=tstep, kind=kind,
                     decay=ch4_fossil, cc_fb=ch4_fb)
         total = co2_rf + ch4_rf
+        
+        if ch4_fb == True:
+            xw.Range('O3').value = ch4_fb
         
         xw.Range('E3').options(transpose=True).value = co2_rf
         xw.Range('F3').options(transpose=True).value = ch4_rf
@@ -83,7 +97,7 @@ def ghg_calc():
         sns.despine()
         fig = plt.gcf()
         plot = xw.Plot(fig).show('MyPlot', 
-                                left=xw.Range('I13').left, 
-                                top=xw.Range('I13').top,
+                                left=xw.Range('I15').left, 
+                                top=xw.Range('I15').top,
                                 width=533, height=400)
     
