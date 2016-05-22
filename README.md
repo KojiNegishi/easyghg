@@ -16,5 +16,7 @@ Everything except ghgforcing should come with the Ananconda installation.
 ### Using the files
 Download the easyghg.xlsm and easyghg.py files and place them in a folder together. The interface is very basic right now - let me know if you have any suggestions/requests!
 
-On the *easyghg* sheet, enter annual CO2 and CH4 emissions into rows B & C. There are a few options in row N related to CH4 (fossil CH4 oxidation to CO2, and climate-carbon feedbacks), and the number of runs for Monte Carlo calculations. Select if you are modeling a pulse emission for better modeling accurary. Note that the mean value results from a Monte Carlo simulation may differ slightly from the expected deterministic value.
+On the *easyghg* sheet, enter annual CO2 and CH4 emissions into rows B & C. You don't need to enter zeros - the program will read all cells that have a value in the *Year* column.
+
+There are a few options in row N related to CH4 (fossil CH4 oxidation to CO2, and climate-carbon feedbacks), and the number of runs for Monte Carlo calculations. Select if you are modeling a pulse emission (all emissions in the first year) for better accurary. Note that the mean value results from a Monte Carlo simulation may differ slightly from the expected deterministic value.
 
