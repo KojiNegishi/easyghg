@@ -18,9 +18,14 @@ def ghg_calc():
     wb = xw.Workbook.caller()
     xw.Sheet('Full_output').clear_contents()
     tstep = 1
-    years = np.arange(0,101)
-    co2_emiss = xw.Range('B3:B103').options(np.array,empty=0).value
-    ch4_emiss = xw.Range('C3:C103').options(np.array,empty=0).value
+    years = xw.Range('A3').vertical.options(np.array).value
+
+    co2_emiss = xw.Range('A3').vertical.offset(column_offset=1).options(np.array,
+                                                                        empty=0).value
+
+    ch4_emiss = xw.Range('A3').vertical.offset(column_offset=2).options(np.array,
+                                                                        empty=0).value
+
     ch4_fossil = str_to_bool(xw.Range('N2').value)
     ch4_fb = str_to_bool(xw.Range('N3').value)
     pulse = str_to_bool(xw.Range('N11').value)
@@ -30,7 +35,7 @@ def ghg_calc():
     kind = xw.Range('N12').value
 
     if pulse == True:
-        tstep = 0.0001
+        tstep = 0.0001 #very small tstep to approximate a delta function
         co2_init = co2_emiss[0]
         ch4_init = ch4_emiss[0]
         
@@ -43,9 +48,9 @@ def ghg_calc():
     
     if n_runs > 1:
         
-        co2_mc, co2_full = CO2(co2_emiss, years, tstep=tstep, RS=RS, kind=kind,
+        co2_mc, co2_full = CO2(co2_emiss, years, RS=RS, kind=kind,
                     runs=n_runs, full_output=full_out)
-        ch4_mc, ch4_full = CH4(ch4_emiss, years, tstep=tstep, RS=RS, kind=kind, 
+        ch4_mc, ch4_full = CH4(ch4_emiss, years, RS=RS, kind=kind, 
                     runs=n_runs, full_output=full_out,
                     decay=ch4_fossil, cc_fb=ch4_fb)
         total_full = co2_full + ch4_full
@@ -66,9 +71,15 @@ def ghg_calc():
         
         sns.set_style('whitegrid')
         plt.plot(mean_rf)
-        plt.fill_between(years, up_sigma, down_sigma, alpha=0.5)
+        plt.fill_between(years, up_sigma, down_sigma, alpha=0.4)
         plt.xlabel('Years', size=14)
-        plt.ylabel('$W \ m^{-2}$', size=14)
+        
+        if kind == 'RF':
+            plt.ylabel('$W \ m^{-2}$', size=14)
+            plt.title('Mean Forcing\nwith 1-sigma uncertainty', size=15)
+        elif kind == 'CRF':
+            plt.ylabel('$W \ m^{-2} \ y$', size=14)
+            plt.title('Mean Cumulative Forcing\nwith 1-sigma uncertainty', size=15)
         sns.despine()
         fig = plt.gcf()
         plot = xw.Plot(fig).show('MyPlot', 
@@ -77,27 +88,29 @@ def ghg_calc():
                                 width=533, height=400)
     
     else:
-        co2_rf = CO2(co2_emiss, years, tstep=tstep, kind=kind,)
-        ch4_rf = CH4(ch4_emiss, years, tstep=tstep, kind=kind,
+        co2_rf = CO2(co2_emiss, years,  kind=kind,)
+        ch4_rf = CH4(ch4_emiss, years,  kind=kind,
                     decay=ch4_fossil, cc_fb=ch4_fb)
         total = co2_rf + ch4_rf
-        
-        if ch4_fb == True:
-            xw.Range('O3').value = ch4_fb
         
         xw.Range('E3').options(transpose=True).value = co2_rf
         xw.Range('F3').options(transpose=True).value = ch4_rf
         xw.Range('G3').options(transpose=True).value = total
+        xw.Range('U3').options(transpose=True).value = ch4_emiss
         
         
         sns.set_style('whitegrid')
         plt.plot(total)
         plt.xlabel('Years', size=14)
-        plt.ylabel('$W \ m^{-2}$', size=14)
+        if kind == 'RF':
+            plt.ylabel('$W \ m^{-2}$', size=14)
+            plt.title('Forcing', size=15)
+        elif kind == 'CRF':
+            plt.ylabel('$W \ m^{-2} \ y$', size=14)
+            plt.title('Cumulative Forcing', size=15)
         sns.despine()
         fig = plt.gcf()
         plot = xw.Plot(fig).show('MyPlot', 
                                 left=xw.Range('I15').left, 
                                 top=xw.Range('I15').top,
                                 width=533, height=400)
-    
