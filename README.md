@@ -1,5 +1,5 @@
 # xlwings version warning
-I haven't updated the easyghg code to work with newer versions of xlwings. Hopefully this will happen soon, but in the meantime try using xlwings version 0.7.2.
+The easyghg code has been updated to work with xlwings versions 9 and up. Check your xlwings version if you encounter any errors. Log an issue if something still doesn't appear to work.
 
 # easyghg
 GHG forcing calculations in Excel using the ghgforcing Python package and xlwings. Still in very early stages, this tool will help users calculate radiative forcing from CO2 and CH4. It can account for CH4 oxidation to CO2, and can output Monte Carlo results.
